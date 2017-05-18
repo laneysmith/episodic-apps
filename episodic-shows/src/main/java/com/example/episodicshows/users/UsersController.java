@@ -1,9 +1,6 @@
 package com.example.episodicshows.users;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
@@ -19,4 +16,10 @@ public class UsersController {
     public User createUser(@RequestBody User user) {
         return this.userRepository.save(user);
     }
+
+    @GetMapping
+    public Iterable<User> getAllUsers() {
+        return this.userRepository.findAll();
+    }
+
 }
