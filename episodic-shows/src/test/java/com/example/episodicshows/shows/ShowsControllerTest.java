@@ -21,8 +21,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @RunWith(SpringRunner.class)
@@ -30,56 +30,138 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class ShowsControllerTest {
 
-    @Autowired
-    MockMvc mvc;
+	@Autowired
+	MockMvc mvc;
 
-    @Autowired
-    ShowRepository showRepository;
+	@Autowired
+	ShowRepository showRepository;
 
-    @Test
-    @Transactional
-    @Rollback
-    public void postShow_createsNewShow() throws Exception {
-        Long count = showRepository.count();
+	@Autowired
+	EpisodeRepository episodeRepository;
 
-        Map<String, Object> payload = new HashMap<String, Object>() {
-            {
-                put("name", "Some show");
-            }
-        };
+	@Autowired
+	EpisodeService episodeService;
 
-        ObjectMapper mapper = new ObjectMapper();
-        String json = mapper.writeValueAsString(payload);
+	@Test
+	@Transactional
+	@Rollback
+	public void postShow_createsNewShow() throws Exception {
+		Long count = showRepository.count();
 
-        MockHttpServletRequestBuilder request = post("/shows")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .content(json);
+		Map<String, Object> payload = new HashMap<String, Object>() {
+			{
+				put("name", "Some show");
+			}
+		};
 
-        mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", notNullValue()))
-                .andExpect(jsonPath("$.name", equalTo("Some show")));
+		ObjectMapper mapper = new ObjectMapper();
+		String json = mapper.writeValueAsString(payload);
 
-        assertThat(showRepository.count(), equalTo(count + 1));
-    }
+		MockHttpServletRequestBuilder request = post("/shows")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(json);
 
-    @Test
-    @Transactional
-    @Rollback
-    public void getShows_returnsAllShows() throws Exception {
-        Show show = new Show();
-        show.setName("Some show");
-        showRepository.save(show);
+		mvc.perform(request)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id", notNullValue()))
+				.andExpect(jsonPath("$.name", equalTo("Some show")));
 
-        MockHttpServletRequestBuilder request = get("/shows")
-                .contentType(MediaType.APPLICATION_JSON);
+		assertThat(showRepository.count(), equalTo(count + 1));
+	}
 
-        mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", equalTo(show.getId().intValue())))
-                .andExpect(jsonPath("$[0].name", equalTo("Some show")));
+	@Test
+	@Transactional
+	@Rollback
+	public void getShows_returnsAllShows() throws Exception {
+		Show show = Show.builder()
+				.name("Some show")
+				.build();
+		showRepository.save(show);
 
-        assertThat(showRepository.count(), equalTo(1L));
-    }
+		MockHttpServletRequestBuilder request = get("/shows")
+				.contentType(MediaType.APPLICATION_JSON);
+
+		mvc.perform(request)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].id", equalTo(show.getId().intValue())))
+				.andExpect(jsonPath("$[0].name", equalTo("Some show")));
+
+		assertThat(showRepository.count(), equalTo(1L));
+	}
+
+	@Test
+	@Transactional
+	@Rollback
+	public void postEpisode_createsNewEpisode() throws Exception {
+		Show show = showRepository.save(Show.builder()
+				.name("Some show")
+				.build());
+		Long count = episodeRepository.count();
+
+		Map<String, Integer> payload = new HashMap<String, Integer>() {
+			{
+				put("seasonNumber", 4);
+				put("episodeNumber", 7);
+			}
+		};
+
+		ObjectMapper mapper = new ObjectMapper();
+		String json = mapper.writeValueAsString(payload);
+
+		MockHttpServletRequestBuilder request = post("/shows/{showId}/episodes", show.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(json);
+
+		mvc.perform(request)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.showId", equalTo(show.getId().intValue())))
+				.andExpect(jsonPath("$.seasonNumber", equalTo(4)))
+				.andExpect(jsonPath("$.episodeNumber", equalTo(7)))
+				.andExpect(jsonPath("$.title", equalTo("S4 E7")));
+
+		assertThat(episodeRepository.count(), equalTo(count + 1));
+	}
+
+	@Test
+	@Transactional
+	@Rollback
+	public void getAllEpisodesByShowId_returnsListOfEpisodes() throws Exception {
+		Show firstShowResult = showRepository.save(Show.builder()
+				.name("First show")
+				.build());
+		Show secondShowResult = showRepository.save(Show.builder()
+				.name("Second show")
+				.build());
+		Long showId = firstShowResult.getId();
+
+		Episode firstShows1e1 = Episode.builder()
+				.showId(showId)
+				.seasonNumber(1)
+				.episodeNumber(1)
+				.build();
+		Episode firstShows1e2 = Episode.builder()
+				.showId(showId)
+				.seasonNumber(1)
+				.episodeNumber(2)
+				.build();
+		Episode secondShows1e1 = Episode.builder()
+				.showId(secondShowResult.getId())
+				.seasonNumber(4)
+				.episodeNumber(5)
+				.build();
+		episodeRepository.save(firstShows1e1);
+		episodeRepository.save(firstShows1e2);
+		episodeRepository.save(secondShows1e1);
+
+		MockHttpServletRequestBuilder request = get("/shows/{showId}/episodes", showId)
+				.contentType(MediaType.APPLICATION_JSON);
+
+		mvc.perform(request)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()", equalTo(2)))
+				.andExpect(jsonPath("$[0].episodeNumber", equalTo(1)))
+				.andExpect(jsonPath("$[1].episodeNumber", equalTo(2)));
+	}
 }

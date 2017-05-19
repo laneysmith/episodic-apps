@@ -67,8 +67,9 @@ public class UsersControllerTest {
 	@Transactional
 	@Rollback
 	public void getUser_returnsAllUsers() throws Exception {
-		User user = new User();
-		user.setEmail("spongebob@squarepants.com");
+		User user = User.builder()
+				.email("spongebob@squarepants.com")
+				.build();
 		userRepository.save(user);
 
 		MockHttpServletRequestBuilder request = get("/users")
