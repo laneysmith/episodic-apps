@@ -21,13 +21,12 @@ public class Episode {
     private Integer episodeNumber;
     private Integer seasonNumber;
 
-
     @Transient
     public String getTitle() {
         return String.format("S%d E%d", this.seasonNumber, this.episodeNumber);
     }
 
-	    @JsonCreator
+	@JsonCreator
 	public Episode(
 			@JsonProperty("id") Long id,
 			@JsonProperty("showId") Long showId,
