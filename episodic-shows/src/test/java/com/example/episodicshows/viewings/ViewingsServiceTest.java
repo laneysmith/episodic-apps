@@ -1,5 +1,6 @@
 package com.example.episodicshows.viewings;
 
+import com.example.episodicshows.TestBase;
 import com.example.episodicshows.shows.Episode;
 import com.example.episodicshows.shows.EpisodeRepository;
 import com.example.episodicshows.shows.Show;
@@ -22,7 +23,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class ViewingsServiceTest {
+public class ViewingsServiceTest extends TestBase {
 
 	@Autowired
 	private UserRepository userRepository;

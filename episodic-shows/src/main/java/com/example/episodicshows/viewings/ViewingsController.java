@@ -1,5 +1,6 @@
 package com.example.episodicshows.viewings;
 
+import com.sun.media.sound.InvalidDataException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class ViewingsController {
 	public Viewing createOrUpdateViewing(
 			@RequestBody Viewing viewing,
 			@PathVariable Long userId
-	) {
+	) throws InvalidDataException {
 		return viewingsService.createOrUpdateViewing(userId, viewing);
 	}
 

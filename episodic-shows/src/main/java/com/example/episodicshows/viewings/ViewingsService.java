@@ -62,6 +62,7 @@ public class ViewingsService {
 
 			return viewingRepository.save(newViewing);
 		}
+
 		return null;
 	}
 
